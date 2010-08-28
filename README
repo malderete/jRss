@@ -1,0 +1,36 @@
+    _ _____          
+   (_)  __ \         
+    _| |__) |___ ___ 
+   | |  _  // __/ __|
+   | | | \ \\__ \__ \
+   | |_|  \_\___/___/
+  _/ |               
+ |__/       for jQuery         
+
+                              
+
+jRss README
+==============
+
+Author
+=======
+
+Martin N. Alderete ( malderete<at>gmail<dot>com )
+
+
+Overview
+========
+
+Welcome to jRss a jQuery plugin.
+It's a parser for Rss feeds, based on the specification version 2.0.
+jRss has been implemented focused on jFeed by Jean-François Hovinne.
+
+
+Dependencies
+============
+
+Now you know that jRss is a jQuery plugin, so you need jQuery because try to use jRss.
+jRss was developed with jQuery version 1.3.2, I guess jRss could be used with new realases of jQuery.
+    
+
+#EOF
