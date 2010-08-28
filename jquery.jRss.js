@@ -20,23 +20,26 @@ JFeed = function(xml) {
     this.parse(xml);
 };
 
-JFeed.prototype = {
+$.extend(JFeed, {
     
-    version: '2.0',
-    type: 'rss',
-    
-    parse: function(xml) {
+    prototype: {
         
-        if(jQuery('channel', xml).length == 1) {
-            var feedClass = new JRss(xml);
-        }
+        version: '2.0',
+        type: 'rss',
         
-        if(feedClass) {
-            jQuery.extend(this, feedClass);
+        parse: function(xml) {
+            
+            if(jQuery('channel', xml).length == 1) {
+                var feedClass = new JRss(xml);
+            }
+            
+            if(feedClass) {
+                jQuery.extend(this, feedClass);
+            }
         }
     }
 
-}; // END Feed class
+}); // END Feed class
 
 
 
@@ -50,23 +53,65 @@ JRss = function(xml) {
 
 $.extend(JRss, {
     
-    channel: null,
-    items: null,
-    
-    init: function(xml) {
+    prototype: {
         
-        var xml_channel = $('channel', xml).eq(0);
-        //Initialize the attributes
-        this.channel = new JChannel(xml_channel);
-        this.items = new Array();
-        
-        var jrss = this;
-        
-        //Create the items
-        jQuery('item', xml).each( function(index, value) {
-            var rss_item = new JFeedItem(value);
-            jrss.items.push(rss_item);
-        });
+        channel: null,
+         
+        items: null,
+         
+        init: function(xml) {
+            
+            var xml_channel = $('channel', xml).eq(0);
+            //Initialize the attributes
+            this.channel = new JChannel(xml_channel);
+            this.items = new Array();
+            
+            var jrss = this;
+            
+            //Create the items
+            jQuery('item', xml).each( function(index, value) {
+                var rss_item = new JRSSItem(value);
+                jrss.items.push(rss_item);
+            });
+        },
+         
+        render_as_table: function(options) {
+            var settings = {
+                id: "jRss",
+                class: "jRss",
+                class_header: "jRss_header",
+                header: null,
+                fields: null,
+                debug: false
+            };
+            
+            $.extend(settings, options||{});
+            
+//             if (!settings.header || !settings.fields) {
+//                 options && options.debug && window.console && console.warn( "Need header and fields, returning nothing" );
+//                 return;
+//             }
+            
+            var table = $("<table></table>").addClass(settings.class).attr("id", settings.id);
+            var tr_header = $("<tr></tr>").addClass(settings.class_header);
+            table.append(tr_header);
+            
+            $.each(settings.header,function(index, value) {
+                var td = $("<td></td>").text(value);
+                tr_header.append(td);
+            });
+            
+            var items = this.items;
+            
+            $.each(items, function(index, item) {
+                var tr_item = $("<tr></tr>");
+                $.each(settings.fields, function(index2, field) {
+                    tr_item.append($("<td></td>").text(items[index][field]));
+                });
+                table.append(tr_item);
+            });
+            return table;
+        },
     }
 
 });
@@ -81,172 +126,182 @@ JChannel = function(xml_channel) {
     this.init(xml_channel);
 };
 
-JChannel.prototype = {
+$.extend(JChannel, {
     
-    //mandatory
-    title: "",
-    link: "",
-    description: "",
-    //optional
-    language: "",
-    copyright: "",
-    managingEditor: "",
-    webMaster: "",
-    pubDate: "",
-    lastBuildDate: "",
-    category: "",
-    generator: "",
-    docs: "",
-    rating: "",
-    ttl: "",
-    skipHours: "",
-    skipDays: "" ,
-    cloud: {},
-    image: { 
-        url: "",
+    prototype: {
+        
+        //mandatory
         title: "",
         link: "",
-    },
-    textInput: { 
-        title: "",
         description: "",
-        name: "",
-        link: "",
-    },
-    
-    //This array hold object's meta data
-    optional_fields: [
-        "language",
-        "copyright",
-        "managingEditor",
-        "webMaster",
-        "pubDate",
-        "lastBuildDate",
-        "category",
-        "generator",
-        "docs",
-        "rating",
-        "ttl",
-        "cloud",
-        "image",
-        "textInput",
-        "skipHours",
-        "skipDays" 
-    ],
-    //Class initialization
-    init: function(xml_channel) {
-        /*
-         * Initialize the channel section
-         */
+        //optional
+        language: "",
+        copyright: "",
+        managingEditor: "",
+        webMaster: "",
+        pubDate: "",
+        lastBuildDate: "",
+        category: "",
+        generator: "",
+        docs: "",
+        rating: "",
+        ttl: "",
+        skipHours: "",
+        skipDays: "" ,
+        cloud: {},
+        image: { 
+            url: "",
+            title: "",
+            link: "",
+        },
+        textInput: { 
+            title: "",
+            description: "",
+            name: "",
+            link: "",
+        },
+        
+        //This array hold object's meta data
+        optional_fields: [
+            "language",
+            "copyright",
+            "managingEditor",
+            "webMaster",
+            "pubDate",
+            "lastBuildDate",
+            "category",
+            "generator",
+            "docs",
+            "rating",
+            "ttl",
+            "cloud",
+            "image",
+            "textInput",
+            "skipHours",
+            "skipDays" 
+        ],
+         
+        //Class initialization
+        init: function(xml_channel) {
+            /*
+            * Initialize the channel section
+            */
 
-        //Set the mandatories fields
-        this.title = $(xml_channel).find('title:first').text();
-        this.link = $(xml_channel).find('link:first').text();
-        this.description = $(xml_channel).find('description:first').text();
-        
-        var self = this;
-        
-        //Set optional fields
-        $.each(this.optional_fields , function(index) {
-            var attr = self.optional_fields[index];
-            var element = $(xml_channel).find(attr + ':first');
+            //Set the mandatories fields
+            this.title = $(xml_channel).find('title:first').text();
+            this.link = $(xml_channel).find('link:first').text();
+            this.description = $(xml_channel).find('description:first').text();
             
-            if (typeof self[attr] == 'object') {
-                $.each(self[attr], function(key) {
-                    var attr_value = $(element).find(key + ':first').text();
-                    self[self.optional_fields[index]][key] = attr_value;
-                });
-            } else {
-                self[self.optional_fields[index]] = element.text();
-            }
-        });
-    },
-    
-    debug: function() {
-        //show all attrs on firebug console
-        var self = this;
-        $.each(this.optional_fields, function(index) {
-            var attr = self.optional_fields[index];
-            console.log(self.optional_fields[index]+ " : "+self[attr]);
-        });
+            var self = this;
+            
+            //Set optional fields
+            $.each(this.optional_fields , function(index) {
+                var attr = self.optional_fields[index];
+                var element = $(xml_channel).find(attr + ':first');
+                
+                if (typeof self[attr] == 'object') {
+                    $.each(self[attr], function(key) {
+                        var attr_value = $(element).find(key + ':first').text();
+                        self[self.optional_fields[index]][key] = attr_value;
+                    });
+                } else {
+                    self[self.optional_fields[index]] = element.text();
+                }
+            });
+        },
+        
+        debug: function() {
+            //show all attrs on firebug console
+            var self = this;
+            $.each(this.optional_fields, function(index) {
+                var attr = self.optional_fields[index];
+                console.log(self.optional_fields[index]+ " : "+self[attr]);
+            });
+        }
+        
     }
     
-}; // END channel class
+}); // END channel class
 
 
 
-// Feed item class
+// RSS item class
 /*This class represents one <item>
 */
-JFeedItem = function(xml_item) {
+JRSSItem = function(xml_item) {
     this.init(xml_item);
 };
 
-JFeedItem.prototype = {
+$.extend(JRSSItem, {
     
-    title: "",
-    description: "",
-    link: "",
-    author: "",
-    category: "",
-    comments: "",
-    enclosure: "",
-    guid: "",
-    pubDate: "",
-    source: "",
-    
-    //This array hold object's meta data
-    optional_fields: [
-                    "title",
-                    "description",
-                    "link",
-                    "author",
-                    "category",
-                    "comments",
-                    "enclosure",
-                    "guid",
-                    "pubDate",
-                    "source"
-    ],
-    //Class initialization
-    init: function(xml_item) {
-        var self = this;
+    prototype: {
         
-        //Set optional fields
-        $.each(this.optional_fields , function(index) {
-            var attr = self.optional_fields[index];
-            var element = $(xml_item).find(attr + ':first');
+        title: "",
+        description: "",
+        link: "",
+        author: "",
+        category: "",
+        comments: "",
+        enclosure: "",
+        guid: "",
+        pubDate: "",
+        source: "",
+        
+        //This array hold object's meta data
+        optional_fields: [
+                        "title",
+                        "description",
+                        "link",
+                        "author",
+                        "category",
+                        "comments",
+                        "enclosure",
+                        "guid",
+                        "pubDate",
+                        "source"
+        ],
+        
+         //Class initialization
+        init: function(xml_item) {
+            var self = this;
             
-            if (typeof self[attr] == 'object') {
-                $.each(self[attr], function(key) {
-                    var attr_value = $(element).find(key + ':first').text();
-                    self[self.optional_fields[index]][key] = attr_value;
-                });
-            } else {
-                self[self.optional_fields[index]] = element.text();
-            }
-        });
+            //Set optional fields
+            $.each(this.optional_fields , function(index) {
+                var attr = self.optional_fields[index];
+                var element = $(xml_item).find(attr + ':first');
+                
+                if (typeof self[attr] == 'object') {
+                    $.each(self[attr], function(key) {
+                        var attr_value = $(element).find(key + ':first').text();
+                        self[self.optional_fields[index]][key] = attr_value;
+                    });
+                } else {
+                    self[self.optional_fields[index]] = element.text();
+                }
+            });
+        }
+        
     }
 
-}; // END Feed item class
+}); // END Feed item class
 
 
 // Library startup!!!
 (function($) {
     //$ is a reference to jQuery.
-    $.jRss = function(settings) {
-        var defaults = {
+    $.jRss = function(options) {
+        var settings = {
                         url: null,
                         data: null, 
                         success: null
         };
         
-        if (!this.length) {
-            options && options.debug && window.console && console.warn( "nothing selected, can't get something, returning nothing" );
-            return;
-        }
+//         if (!this.length) {
+//             options && options.debug && window.console && console.warn( "nothing selected, can't get something, returning nothing" );
+//             return;
+//         }
         
-        $.extend(defaults, settings);
+        $.extend(settings, options||{});
 
         if (settings.url) {
             //Let's get the data
