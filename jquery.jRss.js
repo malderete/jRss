@@ -29,12 +29,12 @@ $.extend(JFeed, {
         
         parse: function(xml) {
             
-            if(jQuery('channel', xml).length == 1) {
+            if($('channel', xml).length == 1) {
                 var feedClass = new JRss(xml);
             }
             
             if(feedClass) {
-                jQuery.extend(this, feedClass);
+                $.extend(this, feedClass);
             }
         }
     }
@@ -292,7 +292,8 @@ $.extend(JRSSItem, {
     $.jRss = function(options) {
         var settings = {
                         url: null,
-                        data: null, 
+                        data: null,
+                        no_standard_fields: null,
                         success: null
         };
         
@@ -302,7 +303,12 @@ $.extend(JRSSItem, {
 //         }
         
         $.extend(settings, options||{});
-
+        //Handle no standard fields! (may be a HACK?)
+        if (settings.no_standard_fields) {
+            $(settings.no_standard_fields).each(function(index) {
+                JRSSItem.prototype.optional_fields.push(this)
+            });
+        }
         if (settings.url) {
             //Let's get the data
             $.ajax({

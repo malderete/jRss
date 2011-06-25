@@ -31,6 +31,47 @@ Dependencies
 
 Now you know that jRss is a jQuery plugin, so you need jQuery because try to use jRss.
 jRss was developed with jQuery version 1.3.2, I guess jRss could be used with new realases of jQuery.
-    
+
+
+Description
+===========
+
+$.jRss(settings)
+    Main function to get the rss feed:
+
+    *Settings
+        url: The Url to get the rss feed.
+        data: Data to the resource.
+        no_standard_fields: Array of strings with names of every "NO STANDARD
+            FIELDS" (this means fields not in RSS 2.0 specification)
+        success(feed): 
+            Callback function with the jRss object.
+
+jRss object description:
+    this.channel --> JChannel
+    this.items --> [jRssItem, ...]
+
+jChannel object description:
+    All attributes in rss 2.0 version
+
+JRssItem object description:
+    All attributes in rss 2.0 version
+
+
+
+Example
+=======
+
+See test.html
+
+...
+...
+success: function(rss) {
+    //Get the rss channel
+    var channel = rss.channel;
+    // Get the rss items
+    var items = rss.items;
+    //your render code HERE !!!
+}
 
 #EOF
